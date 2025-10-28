@@ -1,0 +1,64 @@
+name: OIDC_Connectivity
+on:
+  workflow_dispatch:
+  #push:
+  #    branches:
+  #     main
+permissions:
+  actions: read # for detecting the Github Actions environment.
+  id-token: write # for creating OIDC tokens for signing.
+  packages: write # for uploading attestations.
+  contents: read
+jobs:
+  OIDC_Connectivity:
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+      JFROG_CLI_REPORT_USAGE: true
+      JFROG_CLI_LOG_LEVEL: true
+      JFROG_CLI_BUILD_PROJECT: ${{ vars.JF_PROJECT }}
+      JFROG_CLI_BUILD_NAME: "OIDC_Connectivity"
+      JFROG_CLI_BUILD_NUMBER: ${{ github.run_number }}
+      JF_URL: ${{ vars.JF_URL }}
+      OIDC_PROVIDER: ${{ vars.OIDC_PROVIDER }}
+      GRADLE_REPO: ${{ vars.GRADLE_REPO }}
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      # Use the specific setup-cli branch
+      - name: Setup JFrog CLI
+        uses: jfrog/setup-jfrog-cli@v4
+        id: setup-cli
+        env:
+          JF_URL: https://${{ env.JF_URL }}/
+          JF_PROJECT: ${{ env.JFROG_CLI_BUILD_PROJECT }}
+          #JF_USER: ${{ secrets.JF_USER }}
+          #JF_PASSWORD: ${{ secrets.JF_PASSWORD }}
+        with:
+          oidc-provider-name: "${{ env.OIDC_PROVIDER }}"
+          oidc-audience: "${{ env.OIDC_PROVIDER }}"
+
+      - name: Check Jfrog connectivity
+        run: |
+          echo "Jfrog CLI Version"
+          jf --version
+
+          echo "Check Jfrog Connectivity"
+          jf rt ping
+
+          echo "Get List of virtual Repositories"
+          jf rt curl "/api/repositories?type=virtual"
+
+      - name: Configure Gradle with JFrog Artifactory
+        run: |
+          echo "Gradle configured with JFrog Artifactory"
+          jf  gradle --repo-resolve=${{ env.GRADLE_REPO }} --repo-deploy=${{ env.GRADLE_REPO }}
+
+          echo "Displaying gradle.yaml configuration"
+          cat .jfrog/projects/gradle.yaml
+
+      - name: Build with Gradle
+        run: |
+          echo "Building the project using Gradle"
+          jf gradle clean build --refresh-dependencies --info
