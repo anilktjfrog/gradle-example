@@ -53,7 +53,7 @@ jobs:
       - name: Configure Gradle with JFrog Artifactory
         run: |
           echo "Gradle configured with JFrog Artifactory"
-          jf  gradle --repo-resolve=${{ env.GRADLE_REPO }} --repo-deploy=${{ env.GRADLE_REPO }}
+          jf  gradlec --repo-resolve=${{ env.GRADLE_REPO }} --repo-deploy=${{ env.GRADLE_REPO }}
 
           echo "Displaying gradle.yaml configuration"
           cat .jfrog/projects/gradle.yaml
