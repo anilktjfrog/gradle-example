@@ -15,16 +15,25 @@ jobs:
     env:
       CI: true
       JFROG_CLI_REPORT_USAGE: true
-      JFROG_CLI_LOG_LEVEL: true
+      JFROG_CLI_LOG_LEVEL: DEBUG
       JFROG_CLI_BUILD_PROJECT: ${{ vars.JF_PROJECT }}
       JFROG_CLI_BUILD_NAME: "OIDC_Connectivity"
       JFROG_CLI_BUILD_NUMBER: ${{ github.run_number }}
       JF_URL: ${{ vars.JF_URL }}
       OIDC_PROVIDER: ${{ vars.OIDC_PROVIDER }}
       GRADLE_REPO: ${{ vars.GRADLE_REPO }}
+
+      # Set the environment variable for THIS JOB only
+      ACTIONS_STEP_DEBUG: true
+      ACTIONS_RUNNER_DEBUG: true
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
+
+      - name: Debug OIDC Claims
+        uses: github/actions-oidc-debugger@main
+        with:
+          audience: '${{ github.server_url }}/${{ github.repository_owner }}'
 
       # Use the specific setup-cli branch
       - name: Setup JFrog CLI
