@@ -9,11 +9,6 @@ permissions:
   id-token: write # for creating OIDC tokens for signing.
   packages: write # for uploading attestations.
   contents: read
-inputs:
-  audience:
-    description: 'The audience to use when requesting the JWT. Your Github server URL and repository owner (e.g. https://github.com/github).'
-    required: true
-    default: '${{ github.server_url }}/${{ github.repository }}'
 jobs:
   OIDC_Connectivity:
     runs-on: ubuntu-22.04
@@ -38,7 +33,7 @@ jobs:
       - name: Debug OIDC claims
         shell: bash
         env:
-          AUDIENCE: "${{ inputs.audience }}"
+          AUDIENCE: '${{ github.server_url }}/${{ github.repository }}'
         run: |
           TOKEN_JSON=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$AUDIENCE")
           ID_TOKEN=$(echo "$TOKEN_JSON" | jq -r .value)
